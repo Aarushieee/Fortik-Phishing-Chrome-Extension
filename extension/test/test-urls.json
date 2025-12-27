@@ -1,0 +1,17 @@
+{
+  "malicious": [
+    "http://192.168.0.5/bank-login",
+    "http://phishing.example.com.free-gift.verify-account.ru/path",
+    "https://very.long.domain.sub.sub.sub.sub.attackersite.com/free-prize?click=now",
+    "http://[2001:db8::1]/urgent-update"
+  ],
+  "safe": [
+    "https://www.google.com/",
+    "https://www.wikipedia.org/",
+    "https://github.com/",
+    "https://developer.chrome.com/"
+  ]
+}
+
+
+

@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SafeGuard Icon Export</title>
+    <style>
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:20px;color:#111}
+      .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+      button{padding:8px 10px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer}
+      button:hover{background:#dc2626}
+      canvas{border:1px solid #ddd;border-radius:8px;background:#0b0b0b}
+      small{color:#666}
+    </style>
+  </head>
+  <body>
+    <h1>SafeGuard Icon Export</h1>
+    <div class="row">
+      <button data-size="16">Download 16x16</button>
+      <button data-size="48">Download 48x48</button>
+      <button data-size="128">Download 128x128</button>
+      <small>Generates red/orange shield with warning mark</small>
+    </div>
+    <p><canvas id="preview" width="128" height="128"></canvas></p>
+    <script>
+      function drawIcon(ctx, size){
+        ctx.clearRect(0,0,size,size);
+        // background
+        ctx.fillStyle = '#0b0b0b';
+        const r = Math.round(size*0.18);
+        roundRect(ctx, 0, 0, size, size, r);
+        ctx.fill();
+        // shield path
+        const grad = ctx.createLinearGradient(0,0,size,size);
+        grad.addColorStop(0,'#7f1d1d');
+        grad.addColorStop(0.6,'#dc2626');
+        grad.addColorStop(1,'#f97316');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        const cx = size/2;
+        ctx.moveTo(cx, size*0.11);
+        ctx.bezierCurveTo(cx+size*0.18, size*0.2, cx+size*0.35, size*0.2, size*0.89, size*0.32);
+        ctx.lineTo(size*0.89, size*0.56);
+        ctx.bezierCurveTo(size*0.89, size*0.82, cx+size*0.1, size*0.94, cx, size*0.98);
+        ctx.bezierCurveTo(cx-size*0.1, size*0.94, size*0.11, size*0.82, size*0.11, size*0.56);
+        ctx.lineTo(size*0.11, size*0.32);
+        ctx.bezierCurveTo(cx-size*0.35, size*0.2, cx-size*0.18, size*0.2, cx, size*0.11);
+        ctx.closePath();
+        ctx.shadowColor = 'rgba(0,0,0,.35)';
+        ctx.shadowBlur = size*0.05;
+        ctx.shadowOffsetY = size*0.02;
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+        // exclamation
+        ctx.fillStyle = '#fff';
+        const barW = Math.max(2, Math.round(size*0.06));
+        const barH = Math.round(size*0.32);
+        const dot = Math.round(size*0.06);
+        ctx.fillRect(Math.round(cx - barW/2), Math.round(size*0.3), barW, barH);
+        ctx.beginPath();
+        ctx.roundRect(Math.round(cx - dot/2), Math.round(size*0.7), dot, dot, Math.round(dot/4));
+        ctx.fill();
+      }
+      function roundRect(ctx,x,y,w,h,r){
+        const rr = Math.min(r, w/2, h/2);
+        ctx.beginPath();
+        ctx.moveTo(x+rr,y);
+        ctx.arcTo(x+w,y,x+w,y+h,rr);
+        ctx.arcTo(x+w,y+h,x,y+h,rr);
+        ctx.arcTo(x,y+h,x,y,rr);
+        ctx.arcTo(x,y,x+w,y,rr);
+        ctx.closePath();
+      }
+      (function init(){
+        const canvas = document.getElementById('preview');
+        const ctx = canvas.getContext('2d');
+        drawIcon(ctx, 128);
+        document.querySelectorAll('button[data-size]').forEach(btn => {
+          btn.addEventListener('click', () => download(parseInt(btn.dataset.size,10)));
+        });
+      })();
+      function download(size){
+        const c = document.createElement('canvas');
+        c.width = size; c.height = size;
+        const ctx = c.getContext('2d');
+        drawIcon(ctx, size);
+        const url = c.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `icon${size}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+    </script>
+  </body>
+  </html>
+
+
+
+

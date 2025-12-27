@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Fotrix - Malicious Site Detector",
+  "short_name": "Fotrix",
+  "version": "1.0",
+  "version_name": "1.0.0",
+  "description": "Real-time protection that flags potentially malicious sites and suspicious links.",
+  "author": "Fotrix",
+  "homepage_url": "https://example.com/safeguard",
+  "minimum_chrome_version": "114",
+  "action": {
+    "default_title": "Fotrix - Malicious Site Detector",
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "notifications",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
+
+

@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SafeGuard Promo Generator</title>
+    <style>
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:20px}
+      .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+      button{padding:8px 10px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer}
+      button:hover{background:#dc2626}
+      canvas{border:1px solid #ddd;border-radius:8px;background:#0b0b0b}
+      small{color:#666}
+    </style>
+  </head>
+  <body>
+    <h1>SafeGuard Promo Generator</h1>
+    <div class="row">
+      <button data-w="1280" data-h="800">Download 1280×800</button>
+      <button data-w="640" data-h="400">Download 640×400</button>
+      <button data-w="440" data-h="280">Download 440×280</button>
+      <small>Generates a red/orange/black promo with app title and tagline.</small>
+    </div>
+    <p><canvas id="preview" width="1280" height="800"></canvas></p>
+    <script>
+      function drawPromo(ctx, w, h){
+        ctx.clearRect(0,0,w,h);
+        // bg gradient
+        const g = ctx.createLinearGradient(0,0,w,h);
+        g.addColorStop(0,'#0b0b0b');
+        g.addColorStop(1,'#111827');
+        ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+        // accent gradient band
+        const g2 = ctx.createLinearGradient(0,0,w,0);
+        g2.addColorStop(0,'#7f1d1d');
+        g2.addColorStop(0.6,'#dc2626');
+        g2.addColorStop(1,'#f97316');
+        ctx.fillStyle = g2; ctx.fillRect(0,0,w,Math.round(h*0.08));
+        // title
+        ctx.fillStyle = '#f97316';
+        ctx.font = `700 ${Math.round(w*0.06)}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.fillText('SafeGuard', Math.round(w*0.08), Math.round(h*0.35));
+        // subtitle
+        ctx.fillStyle = '#e5e7eb';
+        ctx.font = `400 ${Math.round(w*0.03)}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.fillText('Malicious Site Detector', Math.round(w*0.08), Math.round(h*0.42));
+        // bullets
+        const bullets = [
+          'Warns on high‑risk pages',
+          'Flags suspicious links before you click',
+          'Privacy-first. Local by default'
+        ];
+        ctx.font = `400 ${Math.round(w*0.022)}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.fillStyle = '#d1d5db';
+        let y = Math.round(h*0.52);
+        for (const b of bullets){ ctx.fillText('• ' + b, Math.round(w*0.08), y); y += Math.round(h*0.06); }
+        // shield icon
+        const s = Math.min(w,h) * 0.25; const x = w*0.68; const y0 = h*0.26;
+        const shield = ctx.createLinearGradient(x, y0, x+s, y0+s);
+        shield.addColorStop(0,'#7f1d1d');
+        shield.addColorStop(0.6,'#dc2626');
+        shield.addColorStop(1,'#f97316');
+        ctx.fillStyle = shield;
+        ctx.beginPath();
+        const cx = x + s/2;
+        ctx.moveTo(cx, y0 + s*0.08);
+        ctx.bezierCurveTo(cx+s*0.18, y0+s*0.2, cx+s*0.35, y0+s*0.2, x+s*0.89, y0+s*0.32);
+        ctx.lineTo(x+s*0.89, y0+s*0.56);
+        ctx.bezierCurveTo(x+s*0.89, y0+s*0.82, cx+s*0.1, y0+s*0.94, cx, y0+s*0.98);
+        ctx.bezierCurveTo(cx-s*0.1, y0+s*0.94, x+s*0.11, y0+s*0.82, x+s*0.11, y0+s*0.56);
+        ctx.lineTo(x+s*0.11, y0+s*0.32);
+        ctx.bezierCurveTo(cx-s*0.35, y0+s*0.2, cx-s*0.18, y0+s*0.2, cx, y0+s*0.08);
+        ctx.closePath(); ctx.fill();
+        // exclamation
+        ctx.fillStyle = '#fff';
+        const bw = s*0.06; const bh = s*0.32; const dot = s*0.06;
+        ctx.fillRect(Math.round(cx - bw/2), Math.round(y0 + s*0.28), Math.round(bw), Math.round(bh));
+        ctx.beginPath(); ctx.roundRect(Math.round(cx - dot/2), Math.round(y0 + s*0.7), Math.round(dot), Math.round(dot), Math.round(dot/4)); ctx.fill();
+      }
+      (function init(){
+        const c = document.getElementById('preview');
+        const ctx = c.getContext('2d');
+        drawPromo(ctx, c.width, c.height);
+        document.querySelectorAll('button[data-w]').forEach(btn => btn.addEventListener('click', () => download(parseInt(btn.dataset.w,10), parseInt(btn.dataset.h,10))));
+      })();
+      function download(w,h){
+        const c = document.createElement('canvas'); c.width = w; c.height = h; const ctx = c.getContext('2d');
+        drawPromo(ctx, w, h);
+        const url = c.toDataURL('image/png');
+        const a = document.createElement('a'); a.href = url; a.download = `safeguard_${w}x${h}.png`; document.body.appendChild(a); a.click(); a.remove();
+      }
+    </script>
+  </body>
+</html>
+
+

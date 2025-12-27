@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reload Extension</title>
+    <style>
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:20px}
+      button{padding:8px 10px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer}
+      button:hover{background:#dc2626}
+    </style>
+  </head>
+  <body>
+    <h1>Reload Extension</h1>
+    <p>Use this during development to quickly reload the extension service worker and pages.</p>
+    <button id="reload">Reload Now</button>
+    <script>
+      document.getElementById('reload').addEventListener('click', () => chrome.runtime.reload());
+    </script>
+  </body>
+  </html>
+
+
+

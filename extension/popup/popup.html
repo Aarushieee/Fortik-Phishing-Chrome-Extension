@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SafeGuard</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <img src="../icons/icon48.png" width="24" height="24" alt="icon" />
+        <h1>SafeGuard</h1>
+      </header>
+
+      <section class="status card">
+        <div class="row between">
+          <div>
+            <div class="site" id="site">Current site</div>
+            <div class="reason" id="reason"></div>
+          </div>
+          <div class="risk pill" id="risk">Checking...</div>
+        </div>
+        <div class="row gap">
+          <button id="rescan">Re-scan</button>
+          <label class="switch">
+            <input type="checkbox" id="toggle-enabled">
+            <span>Protection</span>
+          </label>
+          <label class="select">
+            <span>Sensitivity</span>
+            <select id="sensitivity">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="stats card">
+        <div class="row between">
+          <div class="stat"><strong id="statTotal">0</strong><span>Total</span></div>
+          <div class="stat"><strong id="statWarn">0</strong><span>Warnings</span></div>
+          <div class="stat"><strong id="statHigh">0</strong><span>High Risk</span></div>
+        </div>
+      </section>
+
+      <section class="history card">
+        <div class="row between">
+          <strong>Recent Detections</strong>
+          <div class="row gap">
+            <button id="export">Export Blocked</button>
+          </div>
+        </div>
+        <ul id="history"></ul>
+      </section>
+
+      <footer>
+        <small>Security theme: red / orange / black</small>
+      </footer>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+  </html>
+
+

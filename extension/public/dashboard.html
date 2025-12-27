@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Malicious URL Detection Dashboard</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; margin: 0; padding: 16px; }
+      header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+      h1 { font-size: 20px; margin: 0; }
+      .controls { display: flex; gap: 8px; align-items: center; }
+      input, button { font: inherit; padding: 8px 10px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border-bottom: 1px solid #7774; padding: 8px; text-align: left; }
+      th { position: sticky; top: 0; background: #00000008; backdrop-filter: blur(4px); }
+      .pill { padding: 2px 8px; border-radius: 999px; font-size: 12px; display: inline-block; }
+      .low { background: #16a34a22; color: #16a34a; }
+      .medium { background: #f59e0b22; color: #f59e0b; }
+      .high { background: #dc262622; color: #dc2626; }
+      .danger { color: #dc2626; }
+      .muted { color: #888; }
+      .auth { display: flex; gap: 8px; }
+      .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+      .card { border: 1px solid #7774; border-radius: 8px; padding: 12px; }
+      .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Malicious URL Detection Dashboard</h1>
+      <div class="controls">
+        <button id="refresh">Refresh</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row">
+          <strong>Basic Auth</strong>
+          <input id="username" placeholder="Username" />
+          <input id="password" placeholder="Password" type="password" />
+          <button id="saveAuth">Save</button>
+          <span id="authStatus" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <input id="testUrl" placeholder="Enter URL to check (POST /check-url)" style="flex:1" />
+          <button id="checkBtn">Check URL</button>
+          <span id="checkResult" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row"><strong>Recent Detections</strong><span id="count" class="muted"></span></div>
+        <div style="overflow:auto; max-height: 60vh;">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>URL</th>
+                <th>Malicious</th>
+                <th>Risk</th>
+                <th>Reason</th>
+                <th>IP</th>
+                <th>UA</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const $ = sel => document.querySelector(sel);
+
+      function getAuthHeader() {
+        const u = localStorage.getItem('auth_u') || '';
+        const p = localStorage.getItem('auth_p') || '';
+        if (!u || !p) return {};
+        const token = btoa(`${u}:${p}`);
+        return { 'Authorization': `Basic ${token}` };
+      }
+
+      async function loadLogs() {
+        $('#authStatus').textContent = '';
+        try {
+          const res = await fetch('/logs', { headers: { ...getAuthHeader() } });
+          if (res.status === 401) {
+            $('#authStatus').textContent = 'Unauthorized - set credentials';
+            return;
+          }
+          const data = await res.json();
+          $('#count').textContent = `(${data.count})`;
+          const tbody = $('#tbody');
+          tbody.innerHTML = '';
+          for (const item of data.logs || []) {
+            const tr = document.createElement('tr');
+            const isMal = item.isMalicious ? 'Yes' : 'No';
+            const risk = item.riskLevel || 'low';
+            tr.innerHTML = `
+              <td title="${item.timestamp}">${new Date(item.timestamp).toLocaleString()}</td>
+              <td><a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.url}</a></td>
+              <td class="${item.isMalicious ? 'danger' : 'muted'}">${isMal}</td>
+              <td><span class="pill ${risk}">${risk}</span></td>
+              <td>${item.reason || ''}</td>
+              <td>${item.ip || ''}</td>
+              <td title="${item.userAgent || ''}">${(item.userAgent || '').slice(0,24)}</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        } catch (e) {
+          console.error(e);
+          $('#authStatus').textContent = 'Failed to load logs';
+        }
+      }
+
+      async function checkUrl() {
+        const url = $('#testUrl').value.trim();
+        if (!url) return;
+        $('#checkResult').textContent = 'Checking...';
+        try {
+          const res = await fetch('/check-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify({ url })
+          });
+          if (res.status === 401) {
+            $('#checkResult').textContent = 'Unauthorized - set credentials';
+            return;
+          }
+          const data = await res.json();
+          $('#checkResult').textContent = `malicious=${data.ismalicious}, risk=${data.riskLevel}, reason=${data.reason}`;
+          loadLogs();
+        } catch (e) {
+          console.error(e);
+          $('#checkResult').textContent = 'Failed';
+        }
+      }
+
+      $('#saveAuth').addEventListener('click', () => {
+        localStorage.setItem('auth_u', $('#username').value.trim());
+        localStorage.setItem('auth_p', $('#password').value.trim());
+        $('#authStatus').textContent = 'Saved';
+      });
+
+      $('#refresh').addEventListener('click', loadLogs);
+      $('#checkBtn').addEventListener('click', checkUrl);
+      window.addEventListener('load', () => {
+        $('#username').value = localStorage.getItem('auth_u') || '';
+        $('#password').value = localStorage.getItem('auth_p') || '';
+        loadLogs();
+      });
+    </script>
+  </body>
+  </html>
+
+

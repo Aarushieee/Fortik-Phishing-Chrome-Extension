@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SafeGuard Test Harness</title>
+    <style>
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:16px}
+      .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+      button{padding:8px 10px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer}
+      button:hover{background:#dc2626}
+      ul{padding-left:18px}
+      li{margin:6px 0}
+      pre{background:#0b0b0b;color:#eee;padding:8px;border-radius:8px;overflow:auto;max-height:240px}
+      .muted{color:#666}
+      label{display:flex;gap:6px;align-items:center}
+      input[type="text"]{padding:6px 8px;border:1px solid #ccc;border-radius:6px;width:360px}
+    </style>
+  </head>
+  <body>
+    <h1>SafeGuard Test Harness</h1>
+    <div class="row">
+      <label><input type="checkbox" id="debug"> Debug logs</label>
+      <label><input type="checkbox" id="mock"> Mock API</label>
+      <input type="text" id="endpoint" placeholder="API endpoint (Lovable /check-url)">
+      <button id="save">Save</button>
+      <button id="reload">Reload Extension</button>
+    </div>
+    <p class="muted">Use mock mode to test offline. Debug logs will print to the extension's service worker console.</p>
+    <h3>Test URLs</h3>
+    <div class="row"><button id="runAll">Analyze All</button></div>
+    <ul id="list"></ul>
+    <h3>Result</h3>
+    <pre id="out"></pre>
+    <script>
+      async function init(){
+        const resp = await fetch('test-urls.json');
+        const data = await resp.json();
+        const list = document.getElementById('list');
+        const urls = [...data.safe, ...data.malicious];
+        for (const u of urls){
+          const li = document.createElement('li');
+          const btn = document.createElement('button');
+          btn.textContent = 'Analyze';
+          const a = document.createElement('a'); a.textContent = u; a.href = u; a.target = '_blank';
+          btn.addEventListener('click', () => analyze(u));
+          li.appendChild(btn); li.appendChild(document.createTextNode(' ')); li.appendChild(a);
+          list.appendChild(li);
+        }
+        document.getElementById('runAll').addEventListener('click', async () => {
+          for (const u of urls) await analyze(u);
+        });
+        document.getElementById('save').addEventListener('click', () => {
+          chrome.runtime.sendMessage({ type: 'SET_API_ENDPOINT', endpoint: document.getElementById('endpoint').value || '' });
+          chrome.runtime.sendMessage({ type: 'SET_DEBUG', value: document.getElementById('debug').checked });
+          chrome.runtime.sendMessage({ type: 'SET_MOCK', value: document.getElementById('mock').checked });
+        });
+        document.getElementById('reload').addEventListener('click', () => chrome.runtime.reload());
+        chrome.runtime.sendMessage({ type: 'GET_API_ENDPOINT' }, r => document.getElementById('endpoint').value = r?.endpoint || '');
+        chrome.runtime.sendMessage({ type: 'GET_DEBUG' }, r => document.getElementById('debug').checked = !!(r && r.value));
+        chrome.runtime.sendMessage({ type: 'GET_MOCK' }, r => document.getElementById('mock').checked = !!(r && r.value));
+      }
+      function log(obj){ const out = document.getElementById('out'); out.textContent = JSON.stringify(obj, null, 2) + '\n' + out.textContent; }
+      function analyze(url){
+        chrome.runtime.sendMessage({ type: 'ANALYZE_URL', url }, (resp) => log({ url, result: resp?.result }));
+      }
+      init();
+    </script>
+  </body>
+  </html>
+
+
+

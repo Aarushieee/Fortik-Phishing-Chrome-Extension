@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SafeGuard Feedback</title>
+    <style>
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:16px}
+      textarea{width:100%;height:120px;padding:8px;border:1px solid #ccc;border-radius:8px}
+      input{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px}
+      button{margin-top:8px;padding:8px 10px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer}
+      button:hover{background:#dc2626}
+      .row{display:flex;gap:8px;align-items:center}
+      ul{padding-left:18px}
+      li{margin:6px 0}
+    </style>
+  </head>
+  <body>
+    <h1>SafeGuard Feedback</h1>
+    <div>
+      <input id="url" placeholder="Related URL (optional)">
+      <textarea id="text" placeholder="Your feedback..."></textarea>
+      <button id="send">Submit</button>
+    </div>
+    <h3>Recent Feedback</h3>
+    <ul id="list"></ul>
+    <script>
+      function render(items){
+        const ul = document.getElementById('list');
+        ul.innerHTML = '';
+        for (const it of (items||[]).slice().reverse()){
+          const li = document.createElement('li');
+          li.textContent = `${new Date(it.ts).toLocaleString()} - ${it.url || '(no url)'} - ${it.text}`;
+          ul.appendChild(li);
+        }
+      }
+      document.getElementById('send').addEventListener('click', ()=>{
+        const url = document.getElementById('url').value;
+        const text = document.getElementById('text').value;
+        chrome.runtime.sendMessage({ type: 'SUBMIT_FEEDBACK', url, text }, ()=>{
+          chrome.runtime.sendMessage({ type: 'GET_FEEDBACK' }, r => render(r?.feedback||[]));
+          document.getElementById('text').value='';
+        });
+      });
+      chrome.runtime.sendMessage({ type: 'GET_FEEDBACK' }, r => render(r?.feedback||[]));
+    </script>
+  </body>
+  </html>
+
+
+
